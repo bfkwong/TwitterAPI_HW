@@ -60,7 +60,7 @@ app.post("/tweet", (req, res) => {
     res.status(400).json(createErr("Must provide a tweet in request body of type string"));
     return;
   }
-  reqWrapper(() => {
+  reqWrapper(res, () => {
     client.post("statuses/update", { status: req.body.tweet }, function (error, tweet, _) {
       if (!error) {
         res.status(200).json(tweet);
