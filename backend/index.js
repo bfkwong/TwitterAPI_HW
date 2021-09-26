@@ -1,6 +1,7 @@
 const express = require("express");
 var Twitter = require("twitter");
 var KeysAndTokens = require("./keys.json");
+var cors = require("cors");
 
 const { createErr, reqWrapper } = require("./utility");
 
@@ -8,6 +9,7 @@ const app = express();
 const port = 3000;
 
 app.use(express.json());
+app.use(cors());
 
 var client = new Twitter(KeysAndTokens);
 
@@ -18,19 +20,31 @@ const userDB = {
 };
 
 // super insecure authentication system, but i guess its better than nothing lol
-app.get("/authenticate", (req, res) => {
-  if (req?.body?.username && req?.body?.password === userDB[req.body.username]) {
-    res.status(200).json({ authToken: "authenticated" });
-  } else {
-    res.status(401).json(createErr("Unable to authenticate"));
+app.post("/authenticate", (req, res) => {
+  if (!req?.body?.username) {
+    res.status(401).json({ message: "No username provided" });
+    return;
   }
+  if (!req?.body?.password) {
+    res.status(401).json({ message: "No password provided" });
+    return;
+  }
+  if (!userDB[req.body.username]) {
+    res.status(401).json({ message: "Username does not exist" });
+    return;
+  }
+  if (req.body.password !== userDB[req.body.username].passwordSHA256) {
+    res.status(401).json({ message: "Incorrect password" });
+    return;
+  }
+  res.status(200).json({ message: "Success" });
 });
 
 app.get("/all_tweets", (req, res) => {
   reqWrapper(res, () => {
-    client.get("statuses/user_timeline", {}, (err, tweet, _) => {
+    client.get("statuses/user_timeline", {}, (err, tweets, _) => {
       if (!err) {
-        res.status(200).json(tweet);
+        res.status(200).json(tweets);
       } else {
         res.status(405).json(createErr("Error from Twitter API", err));
       }
@@ -56,6 +70,7 @@ app.get("/tweet/:id", (req, res) => {
 });
 
 app.post("/tweet", (req, res) => {
+  console.log(req.body);
   if (typeof req.body.tweet !== "string") {
     res.status(400).json(createErr("Must provide a tweet in request body of type string"));
     return;
