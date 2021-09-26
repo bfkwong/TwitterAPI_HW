@@ -60,7 +60,6 @@ const getTweetHandler = (req, res) => {
 };
 
 const postTweetHandler = (req, res) => {
-  console.log(req.body);
   if (typeof req.body.tweet !== "string") {
     res.status(400).json(createErr("Must provide a tweet in request body of type string"));
     return;
