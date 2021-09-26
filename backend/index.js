@@ -20,7 +20,7 @@ const userDB = {
 // super insecure authentication system, but i guess its better than nothing lol
 app.get("/authenticate", (req, res) => {
   if (req?.body?.username && req?.body?.password === userDB[req.body.username]) {
-    res.status(200).json({ authToken: useToken });
+    res.status(200).json({ authToken: "authenticated" });
   } else {
     res.status(401).json(createErr("Unable to authenticate"));
   }
